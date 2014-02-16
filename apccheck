@@ -4,6 +4,7 @@
 # Version 0.1
 #
 # This script parses the data returned by apcaccess and returns the requested parameter
+# Suggested placement of script on linux: /usr/local/bin/
 #
 
 import subprocess
@@ -11,7 +12,8 @@ import sys
 import traceback
 
 _known_keys = {
-    'LOTRANS': (lambda key: LOTRANS(key)), 'VERSION': (lambda key: VERSION(key)),
+    'LOTRANS': (lambda key: LOTRANS(key)),
+    'VERSION': (lambda key: VERSION(key)),
     'LINEV': (lambda key: LINEV(key)),
     'LOADPCT': (lambda key: LOADPCT(key)),
     'BCHARGE': (lambda key: BCHARGE(key)),
@@ -134,27 +136,38 @@ def LOTRANS(key):
 
 def main(argv):
     try:
+        # Run apcaccess to get the stdout output
         stdout = subprocess.Popen(_apcaccess, shell=True, stdout=subprocess.PIPE)
         stats = {}
         final_stats = {}
 
+        # Each line is delimited by a colon.
         for line in stdout.stdout:
             key, value = line.split(': ')
             stats[key.strip().upper()] = value.strip()
 
+        # Some stats can be stripped and parsed for better readability. This
+        # runs them through a dictionary of mapped lambda functions that
+        # return properly parsed data.
         for stat in stats:
             try:
                 newstat = _known_keys[stat]
             except KeyError:
+                # The stat name was not in the dict and doesn't need further
+                # processing
                 newstat = None
             except ValueError:
+                # We tried to parse data that wasn't in a format we expected
                 newstat = None
+            # If parsed data was returned, we'll use that to replace the
+            # default.
             if newstat:
                 final_stats[stat] = newstat(stats[stat])
             else:
                 final_stats[stat] = stats[stat]
         try:
-            print final_stats[argv.upper()]
+            # Now we can try printing the requested stat
+            print >> sys.stdout, final_stats[argv.upper()]
         except KeyError:
             print >> sys.stderr, 'Specified key not found in apcaccess output.'
             print >> sys.stdout, 'Specified key not found in apcaccess output.'
