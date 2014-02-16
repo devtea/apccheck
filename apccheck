@@ -1,0 +1,171 @@
+#!/usr/bin/python
+# Python 2.7
+#
+# Version 0.1
+#
+# This script parses the data returned by apcaccess and returns the requested parameter
+#
+
+import subprocess
+import sys
+import traceback
+
+_known_keys = {
+    'LOTRANS': (lambda key: LOTRANS(key)), 'VERSION': (lambda key: VERSION(key)),
+    'LINEV': (lambda key: LINEV(key)),
+    'LOADPCT': (lambda key: LOADPCT(key)),
+    'BCHARGE': (lambda key: BCHARGE(key)),
+    'TIMELEFT': (lambda key: TIMELEFT(key)),
+    'MBATTCHG': (lambda key: MBATTCHG(key)),
+    'MINTIMEL': (lambda key: MINTIMEL(key)),
+    'MAXTIME': (lambda key: MAXTIME(key)),
+    'HITRANS': (lambda key: HITRANS(key)),
+    'BATTV': (lambda key: BATTV(key)),
+    'TONBATT': (lambda key: TONBATT(key)),
+    'CUMONBATT': (lambda key: CUMONBATT(key)),
+    'SELFTEST': (lambda key: SELFTEST(key)),
+    'STATFLAG': (lambda key: STATFLAG(key)),
+    'NOMINV': (lambda key: NOMINV(key)),
+    'NOMBATTV': (lambda key: NOMBATTV(key)),
+    'NOMPOWER': (lambda key: NOMPOWER(key))
+}
+_apcaccess = '/sbin/apcaccess'
+
+
+def NOMPOWER(key):
+    """'865 Watts'  >>  865"""
+    return int(key.split()[0])
+
+
+def NOMBATTV(key):
+    """'24.0 Volts'  >>  24.0"""
+    return float(key.split()[0])
+
+
+def NOMINV(key):
+    """'120 Volts'  >>  120"""
+    return int(key.split()[0])
+
+
+def STATFLAG(key):
+    """'0x07000008 Status Flag'  >>  Online"""
+    return key.split()[0]  # Need to scour the documentation more
+
+
+def SELFTEST(key):
+    """'NO'  >>  0"""
+    if key.lower() == 'no':
+        return 0
+    return 1
+
+
+def CUMONBATT(key):
+    """'72 seconds'  >>  72"""
+    return int(key.split()[0])
+
+
+def TONBATT(key):
+    """'0 seconds'  >>  0"""
+    return int(key.split()[0])
+
+
+def BATTV(key):
+    """'26.6 Volts'  >>  26.6"""
+    return float(key.split()[0])
+
+
+def HITRANS(key):
+    """'132.0 Volts'  >>  132.0"""
+    return float(key.split()[0])
+
+
+def MAXTIME(key):
+    """'0 Seconds'  >>  0"""
+    return int(key.split()[0])
+
+
+def MINTIMEL(key):
+    """'5 Minutes'  >>  5"""
+    return int(key.split()[0])
+
+
+def MBATTCHG(key):
+    """'5 Percent'  >>  5"""
+    return int(key.split()[0])
+
+
+def TIMELEFT(key):
+    """'50.6 Minutes'  >>  50.6"""
+    return float(key.split()[0])
+
+
+def BCHARGE(key):
+    """'100.0 Percent'  >>  100.0"""
+    return float(key.split()[0])
+
+
+def LOADPCT(key):
+    """'17.0 Percent Load Capacity'  >>  17.0"""
+    return float(key.split()[0])
+
+
+def LINEV(key):
+    """'125.0 Volts'  >>  125.0"""
+    return float(key.split()[0])
+
+
+#unused so far
+def online(key):
+    """'ONLINE'  >>  1"""
+    if key.upper() == 'ONLINE':
+        return 1
+    return 0
+
+
+def VERSION(key):
+    """'3.14.10 (13 September 2011) debian'  >>  '3.14.10'"""
+    return key.split()[0]
+
+
+def LOTRANS(key):
+    """'097.0 Volts'  >>  97.0"""
+    return float(key.split()[0])
+
+
+def main(argv):
+    try:
+        stdout = subprocess.Popen(_apcaccess, shell=True, stdout=subprocess.PIPE)
+        stats = {}
+        final_stats = {}
+
+        for line in stdout.stdout:
+            key, value = line.split(': ')
+            stats[key.strip().upper()] = value.strip()
+
+        for stat in stats:
+            try:
+                newstat = _known_keys[stat]
+            except KeyError:
+                newstat = None
+            except ValueError:
+                newstat = None
+            if newstat:
+                final_stats[stat] = newstat(stats[stat])
+            else:
+                final_stats[stat] = stats[stat]
+        try:
+            print final_stats[argv.upper()]
+        except KeyError:
+            print >> sys.stderr, 'Specified key not found in apcaccess output.'
+            print >> sys.stdout, 'Specified key not found in apcaccess output.'
+    except:
+        print >> sys.stderr, traceback.format_exc()
+        print >> sys.stdout, 'Unhandled Exception!'
+
+
+if __name__ == '__main__':
+    try:
+        main(sys.argv[1])
+    except IndexError:
+        print >> sys.stderr, "No status line specified."
+        print >> sys.stdout, "No status line specified."
