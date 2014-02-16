@@ -1,0 +1,7 @@
+This project is a collection of scripts and config files designed to integrate the APC apcaccess utility with Zabbix and other server monitoring software. While the script was designed with Zabbix capabilities in mind, it may be useful for other applications.
+
+Files:
+
+APC_Smart_UPS.xml   Zabbix template
+APC_UPS.conf        Zabbix agent config file
+apccheck            Python 2.7 script to parse apcaccess
