@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Python 2.7
 #
-# Version 0.1
+# Version 0.1.2
 #
 # This script parses the data returned by apcaccess and returns the requested parameter
 # Suggested placement of script on linux: /usr/local/bin/
@@ -12,40 +12,35 @@ import sys
 import traceback
 
 _known_keys = {
-    'LOTRANS': (lambda key: LOTRANS(key)),
+    'LOTRANS': (lambda key: SimpleFloat(key)),
     'VERSION': (lambda key: VERSION(key)),
-    'LINEV': (lambda key: LINEV(key)),
-    'LOADPCT': (lambda key: LOADPCT(key)),
-    'BCHARGE': (lambda key: BCHARGE(key)),
-    'TIMELEFT': (lambda key: TIMELEFT(key)),
-    'MBATTCHG': (lambda key: MBATTCHG(key)),
-    'MINTIMEL': (lambda key: MINTIMEL(key)),
-    'MAXTIME': (lambda key: MAXTIME(key)),
-    'HITRANS': (lambda key: HITRANS(key)),
-    'BATTV': (lambda key: BATTV(key)),
-    'TONBATT': (lambda key: TONBATT(key)),
-    'CUMONBATT': (lambda key: CUMONBATT(key)),
+    'LINEV': (lambda key: SimpleFloat(key)),
+    'LOADPCT': (lambda key: SimpleFloat(key)),
+    'BCHARGE': (lambda key: SimpleFloat(key)),
+    'TIMELEFT': (lambda key: SimpleFloat(key)),
+    'MBATTCHG': (lambda key: SimpleInt(key)),
+    'MINTIMEL': (lambda key: SimpleInt(key)),
+    'MAXTIME': (lambda key: SimpleInt(key)),
+    'HITRANS': (lambda key: SimpleFloat(key)),
+    'BATTV': (lambda key: SimpleFloat(key)),
+    'TONBATT': (lambda key: SimpleInt(key)),
+    'CUMONBATT': (lambda key: SimpleInt(key)),
     'SELFTEST': (lambda key: SELFTEST(key)),
     'STATFLAG': (lambda key: STATFLAG(key)),
-    'NOMINV': (lambda key: NOMINV(key)),
-    'NOMBATTV': (lambda key: NOMBATTV(key)),
-    'NOMPOWER': (lambda key: NOMPOWER(key))
+    'NOMINV': (lambda key: SimpleInt(key)),
+    'NOMBATTV': (lambda key: SimpleFloat(key)),
+    'NOMPOWER': (lambda key: SimpleInt(key))
 }
 _apcaccess = '/sbin/apcaccess'
 
 
-def NOMPOWER(key):
-    """'865 Watts'  >>  865"""
-    return int(key.split()[0])
-
-
-def NOMBATTV(key):
-    """'24.0 Volts'  >>  24.0"""
+def SimpleFloat(key):
+    """'3.4 cuils'  >>  3.4"""
     return float(key.split()[0])
 
 
-def NOMINV(key):
-    """'120 Volts'  >>  120"""
+def SimpleInt(key):
+    """'3 cuils'  >>  3"""
     return int(key.split()[0])
 
 
@@ -61,61 +56,6 @@ def SELFTEST(key):
     return 1
 
 
-def CUMONBATT(key):
-    """'72 seconds'  >>  72"""
-    return int(key.split()[0])
-
-
-def TONBATT(key):
-    """'0 seconds'  >>  0"""
-    return int(key.split()[0])
-
-
-def BATTV(key):
-    """'26.6 Volts'  >>  26.6"""
-    return float(key.split()[0])
-
-
-def HITRANS(key):
-    """'132.0 Volts'  >>  132.0"""
-    return float(key.split()[0])
-
-
-def MAXTIME(key):
-    """'0 Seconds'  >>  0"""
-    return int(key.split()[0])
-
-
-def MINTIMEL(key):
-    """'5 Minutes'  >>  5"""
-    return int(key.split()[0])
-
-
-def MBATTCHG(key):
-    """'5 Percent'  >>  5"""
-    return int(key.split()[0])
-
-
-def TIMELEFT(key):
-    """'50.6 Minutes'  >>  50.6"""
-    return float(key.split()[0])
-
-
-def BCHARGE(key):
-    """'100.0 Percent'  >>  100.0"""
-    return float(key.split()[0])
-
-
-def LOADPCT(key):
-    """'17.0 Percent Load Capacity'  >>  17.0"""
-    return float(key.split()[0])
-
-
-def LINEV(key):
-    """'125.0 Volts'  >>  125.0"""
-    return float(key.split()[0])
-
-
 #unused so far
 def online(key):
     """'ONLINE'  >>  1"""
@@ -127,11 +67,6 @@ def online(key):
 def VERSION(key):
     """'3.14.10 (13 September 2011) debian'  >>  '3.14.10'"""
     return key.split()[0]
-
-
-def LOTRANS(key):
-    """'097.0 Volts'  >>  97.0"""
-    return float(key.split()[0])
 
 
 def main(argv):
